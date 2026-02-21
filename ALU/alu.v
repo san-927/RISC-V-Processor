@@ -35,10 +35,13 @@ module alu_64_bit(
     or_64  u_or    (.a(a), .b(b), .or_out(or_out), .zero_flag(or_zero));
     xor_64 u_xor   (.a(a), .b(b), .xor_out(xor_out), .zero_flag(xor_zero));
 
+    wire addsub_sub_sel = (opcode == 4'b0110);
+    wire [3:0] addsub_opcode = {addsub_sub_sel, opcode[2:0]};
+
     add_sub_64 u_addsub(
         .a(a),
         .b(b),
-        .opcode(opcode),   
+        .opcode(addsub_opcode),
         .out(addsub_out),
         .carry_flag(addsub_cout),
         .overflow_flag(addsub_overflow),
@@ -67,59 +70,59 @@ module alu_64_bit(
         result = 64'd0;
 
         case (opcode)
-            // ADD
+            // AND
             4'b0000: begin
+                result = and_out;
+            end
+
+            // OR
+            4'b0001: begin
+                result = or_out;
+            end
+
+            // ADD
+            4'b0010: begin
                 result = addsub_out;
                 cout = addsub_cout;
                 carry_flag = addsub_cout;
                 overflow_flag = addsub_overflow;
             end
 
-            // SLL
-            4'b0001: begin
+            // SLL 
+            4'b0011: begin
                 result = sll_out;
             end
 
             // SLT
-            4'b0010: begin
+            4'b0100: begin
                 result = slt_out;
             end
 
-            // SLTU
-            4'b0011: begin
+            // SLTU 
+            4'b0101: begin
                 result = sltu_out;
             end
 
-            // XOR
-            4'b0100: begin
-                result = xor_out;
-            end
-
-            // SRL
-            4'b0101: begin
-                result = srl_out;
-            end
-
-            // OR
+            // SUBTRACT
             4'b0110: begin
-                result = or_out;
-            end
-
-            // AND
-            4'b0111: begin
-                result = and_out;
-            end
-
-            // SUB
-            4'b1000: begin
                 result = addsub_out;
                 cout = addsub_cout;
                 carry_flag = addsub_cout;
                 overflow_flag = addsub_overflow;
             end
 
+            // XOR 
+            4'b0111: begin
+                result = xor_out;
+            end
+
+            // SRL
+            4'b1000: begin
+                result = srl_out;
+            end
+
             // SRA
-            4'b1101: begin
+            4'b1010: begin
                 result = sra_out;
             end
 

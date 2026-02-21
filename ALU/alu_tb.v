@@ -8,17 +8,17 @@ module alu_64_bit_tb;
     wire cout, carry_flag, overflow_flag, zero_flag;
     integer pass_count = 0, total_tests = 2;
     
-    // Control codes
-    localparam  ADD_Oper  = 4'b0000,
-                SLL_Oper  = 4'b0001,
-                SLT_Oper  = 4'b0010,
-                SLTU_Oper = 4'b0011,
-                XOR_Oper  = 4'b0100,
-                SRL_Oper  = 4'b0101,
-                OR_Oper   = 4'b0110,
-                AND_Oper  = 4'b0111,
-                SUB_Oper  = 4'b1000,
-                SRA_Oper  = 4'b1101;
+    // Control codes (updated mapping)
+    localparam  AND_Oper  = 4'b0000,
+                OR_Oper   = 4'b0001,
+                ADD_Oper  = 4'b0010,
+                SLL_Oper  = 4'b0011,
+                SLT_Oper  = 4'b0100,
+                SLTU_Oper = 4'b0101,
+                SUB_Oper  = 4'b0110,
+                XOR_Oper  = 4'b0111,
+                SRL_Oper  = 4'b1000,
+                SRA_Oper  = 4'b1010;
     
     // Instantiate the ALU wrapper
     alu_64_bit uut(
