@@ -1,3 +1,8 @@
+`timescale 1ns/1ps
+
+`ifndef ImmGen
+`define ImmGen
+
 module ImmGen (instr, imm_out);
     input [31:0] instr;
     output reg [63:0] imm_out;
@@ -23,3 +28,5 @@ module ImmGen (instr, imm_out);
         endcase
     end
 endmodule
+
+`endif
