@@ -10,7 +10,7 @@ module register_file(
     output [63:0] read_data2
 );
 
-reg [63:0] registers [0:31];
+reg [63:0] registers [31:0];
 integer i;
 
 // Initialize registers
