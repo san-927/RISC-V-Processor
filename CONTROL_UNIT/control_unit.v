@@ -14,7 +14,6 @@ module control_unit(
     output reg [1:0] ALUOp
 );
 
-    // Combinational control logic: set control signals based on opcode
     always @(*) begin
         case (opcode)
             7'b0110011: begin // R-format

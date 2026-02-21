@@ -17,13 +17,13 @@ integer i;
 initial begin
     for (i = 0; i < 32; i = i + 1) 
     begin
-        registers[i] = 64'b0;
+        registers[i] <= 64'b0;
     end
 end
 
 // Read data (combinational)
-assign read_data1 = registers[read_reg1];
-assign read_data2 = registers[read_reg2];   
+assign read_data1 <= registers[read_reg1];
+assign read_data2 <= registers[read_reg2];   
 // Write data (sequential)
 always @(posedge clk or posedge reset) begin
     if (reset) begin
