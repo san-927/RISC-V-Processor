@@ -49,6 +49,7 @@ module add_sub_64(
         end
     endgenerate
 
+    assign or_stage[0] = out[0];
     generate
         for (i = 1; i < 64; i = i + 1)
         begin : or_chain
