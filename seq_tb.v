@@ -23,6 +23,11 @@ module seq;
     reg [1023:0] line_buf;
 
     initial begin
+        $dumpfile("seq_tb.vcd");
+        $dumpvars(0, seq);
+    end
+
+    initial begin
         clk = 0;
         reset = 1;
         cycle_count = 0;
