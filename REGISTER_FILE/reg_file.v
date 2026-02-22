@@ -1,3 +1,6 @@
+`ifndef REG_FILE
+`define REG_FILE
+
 module register_file(
     input clk,
     input reset,
@@ -15,26 +18,29 @@ integer i;
 
 // Initialize registers
 initial begin
-    for (i = 0; i < 32; i = i + 1) 
-    begin
-        registers[i] <= 64'b0;
-    end
+    for (i = 0; i < 32; i = i + 1)
+        registers[i] = 64'd0;
 end
 
-// Read data (combinational)
-assign read_data1 = registers[read_reg1];
-assign read_data2 = registers[read_reg2];
-// Write data (sequential)
+// Combinational Read
+assign read_data1 = (read_reg1 == 5'd0) ? 64'd0 : registers[read_reg1];
+assign read_data2 = (read_reg2 == 5'd0) ? 64'd0 : registers[read_reg2];
+
+// Sequential Write + Reset
 always @(posedge clk or posedge reset) begin
     if (reset) begin
-        for (i = 0; i < 32; i = i + 1) 
-        begin
-            registers[i] <= 64'b0;
-        end
-    end
-    else if (reg_write_en && write_reg != 0) begin
-        registers[write_reg] <= write_data;
+        for (i = 0; i < 32; i = i + 1)
+            registers[i] <= 64'd0;
+    end 
+    else begin
+        if (reg_write_en)
+            registers[write_reg] <= write_data;
+
+        //Hardwire x0 to zero
+        registers[0] <= 64'd0;
     end
 end
 
 endmodule
+
+`endif
