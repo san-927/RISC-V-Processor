@@ -112,17 +112,12 @@ module processor(
         .zero_flag(alu_zero_flag) 
     );
 
-    //Shift Left Logical for calculating branch target address
-    wire [63:0] imm_gen_out_shifted;
-    assign imm_gen_out_shifted [63:1] = imm_gen_out [62:0];
-    assign imm_gen_out_shifted [0] = 1'b0; 
-
     // Branch target address calculation
     wire [63:0] branch_target_address;
     wire  branch_add_zero;
     add_sub_64 branch_adder(
         .a(pc_out),
-        .b(imm_gen_out_shifted),
+        .b(imm_gen_out),
         .opcode(4'b0000), // Addition
         .out(branch_target_address),
         .zero_flag(branch_add_zero)
