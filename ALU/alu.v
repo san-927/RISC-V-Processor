@@ -1,3 +1,6 @@
+`ifdef alu_64_bit
+`define alu_64_bit
+
 `include "and.v"
 `include "or.v"
 `include "xor.v"
@@ -6,6 +9,7 @@
 `include "srl.v"
 `include "sra.v"
 `include "sltu.v"
+
 
 
 module alu_64_bit(
@@ -134,3 +138,5 @@ module alu_64_bit(
     end
 
 endmodule
+
+`endif

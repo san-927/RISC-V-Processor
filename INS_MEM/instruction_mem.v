@@ -1,3 +1,7 @@
+`timescale 1ns/1ps
+`ifndef instruction_mem
+`define instruction_mem
+
 module instruction_mem #(
     parameter IMEM_SIZE = 4096
 )(
@@ -21,3 +25,5 @@ always @(*) begin
 end
 
 endmodule
+
+`endif
