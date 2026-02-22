@@ -21,7 +21,7 @@ module ImmGen (instr, imm_out);
                 imm_out = {{52{instr[31]}}, instr[31:25], instr[11:7]};
 
             7'b1100011: // B-type
-                imm_out = {{51{instr[31]}}, instr[31], instr[7], instr[30:25], instr[11:8], 1'b0};
+                imm_out = {{52{instr[31]}}, instr[31], instr[7], instr[30:25], instr[11:8]};
 
             default:
                 imm_out = 64'd0;

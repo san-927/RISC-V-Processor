@@ -1,6 +1,6 @@
 `ifndef SLT_V
 `define SLT_V
-`include "add_sub.v"
+`include "ALU/add_sub.v"
 
 module set_less(
     input  [63:0] a,

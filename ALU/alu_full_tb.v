@@ -1,5 +1,5 @@
 `timescale 1ns/1ps
-`include "alu.v"
+`include "./alu.v"
 
 module alu_64_bit_tb;
     reg [63:0] a, b;
@@ -8,17 +8,17 @@ module alu_64_bit_tb;
     wire cout, carry_flag, overflow_flag, zero_flag;
     integer pass_count = 0, total_tests = 55;
     
-    // Control codes (updated mapping)
-    localparam  AND_Oper  = 4'b0000,
-                OR_Oper   = 4'b0001,
-                ADD_Oper  = 4'b0010,
-                SLL_Oper  = 4'b0011,
-                SLT_Oper  = 4'b0100,
-                SLTU_Oper = 4'b0101,
-                SUB_Oper  = 4'b0110,
-                XOR_Oper  = 4'b0111,
-                SRL_Oper  = 4'b1000,
-                SRA_Oper  = 4'b1010;
+    // Control codes
+    localparam  ADD_Oper  = 4'b0000,
+                SLL_Oper  = 4'b0001,
+                SLT_Oper  = 4'b0010,
+                SLTU_Oper = 4'b0011,
+                XOR_Oper  = 4'b0100,
+                SRL_Oper  = 4'b0101,
+                OR_Oper   = 4'b0110,
+                AND_Oper  = 4'b0111,
+                SUB_Oper  = 4'b1000,
+                SRA_Oper  = 4'b1101;
     
     // Instantiate the ALU
     alu_64_bit uut(
@@ -130,7 +130,7 @@ module alu_64_bit_tb;
         $dumpvars(0, alu_64_bit_tb);
         pass_count = 0;
 
-        // ======================== ADD (opcode 0010) ========================
+        // ======================== ADD (opcode 0000) ========================
 
         // Baseline: 0 + 0 = 0, zero flag set
         run_test(1, 64'h0000000000000000, 64'h0000000000000000, 64'h0000000000000000, ADD_Oper, 0, 0, 1);
@@ -168,7 +168,7 @@ module alu_64_bit_tb;
         // Mid-word carry chain: upper + lower cancel to zero
         run_test(12, 64'h0000000100000000, 64'hFFFFFFFF00000000, 64'h0000000000000000, ADD_Oper, 1, 0, 1);
 
-        // ======================== SUB (opcode 0110) ========================
+        // ======================== SUB (opcode 1000) ========================
 
         // Baseline: 0 - 0 = 0
         run_test_sub(13, 64'h0000000000000000, 64'h0000000000000000, 64'h0000000000000000, SUB_Oper, 0, 1);
@@ -203,7 +203,7 @@ module alu_64_bit_tb;
         // Small minus large: 1 - all-ones = 2
         run_test_sub(23, 64'h0000000000000001, 64'hFFFFFFFFFFFFFFFF, 64'h0000000000000002, SUB_Oper, 0, 0);
 
-        // ======================== AND (opcode 0000) ========================
+        // ======================== AND (opcode 0111) ========================
 
         // Masking with zero: all-ones AND 0 = 0
         run_test_rz(24, 64'hFFFFFFFFFFFFFFFF, 64'h0000000000000000, 64'h0000000000000000, AND_Oper, 1);
@@ -217,7 +217,7 @@ module alu_64_bit_tb;
         // Upper 32-bit mask extraction
         run_test_rz(27, 64'h123456789ABCDEF0, 64'hFFFFFFFF00000000, 64'h1234567800000000, AND_Oper, 0);
 
-        // ======================== OR (opcode 0001) ========================
+        // ======================== OR (opcode 0110) ========================
 
         // Baseline: 0 OR 0 = 0
         run_test_rz(28, 64'h0000000000000000, 64'h0000000000000000, 64'h0000000000000000, OR_Oper, 1);
@@ -231,7 +231,7 @@ module alu_64_bit_tb;
         // Random OR pattern
         run_test_rz(31, 64'h00002C84C4D54177, 64'h011C2D636E06D380, 64'h011C2DE7EED7D3F7, OR_Oper, 0);
 
-        // ======================== XOR (opcode 0111) ========================
+        // ======================== XOR (opcode 0100) ========================
 
         // Baseline: 0 XOR 0 = 0
         run_test_rz(32, 64'h0000000000000000, 64'h0000000000000000, 64'h0000000000000000, XOR_Oper, 1);
@@ -245,7 +245,7 @@ module alu_64_bit_tb;
         // Self-XOR cancels to zero
         run_test_rz(35, 64'h123456789ABCDEF0, 64'h123456789ABCDEF0, 64'h0000000000000000, XOR_Oper, 1);
 
-        // ======================== SLL (opcode 0011) ========================
+        // ======================== SLL (opcode 0001) ========================
 
         // Shift by 0: no change (upper bits of b ignored)
         run_test_rz(36, 64'h0000000000000001, 64'h000BEEF000000000, 64'h0000000000000001, SLL_Oper, 0);

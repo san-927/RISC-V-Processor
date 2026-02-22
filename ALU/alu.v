@@ -1,15 +1,11 @@
-`ifdef alu_64_bit
-`define alu_64_bit
-
-`include "and.v"
-`include "or.v"
-`include "xor.v"
-`include "add_sub.v"
-`include "sll.v"
-`include "srl.v"
-`include "sra.v"
-`include "sltu.v"
-
+`include "ALU/and.v"
+`include "ALU/or.v"
+`include "ALU/xor.v"
+`include "ALU/add_sub.v"
+`include "ALU/sll.v"
+`include "ALU/srl.v"
+`include "ALU/sra.v"
+`include "ALU/sltu.v"
 
 
 module alu_64_bit(
@@ -39,13 +35,29 @@ module alu_64_bit(
     or_64  u_or    (.a(a), .b(b), .or_out(or_out), .zero_flag(or_zero));
     xor_64 u_xor   (.a(a), .b(b), .xor_out(xor_out), .zero_flag(xor_zero));
 
-    wire addsub_sub_sel = (opcode == 4'b0110);
-    wire [3:0] addsub_opcode = {addsub_sub_sel, opcode[2:0]};
+    // Translate new ALU opcode to legacy encoding used by this ALU
+    reg [3:0] opcode_old;
+
+    always @(*) begin
+        case (opcode)
+            4'b0000: opcode_old = 4'b0111; // AND
+            4'b0001: opcode_old = 4'b0110; // OR
+            4'b0010: opcode_old = 4'b0000; // ADD
+            4'b0011: opcode_old = 4'b0001; // SLL
+            4'b0100: opcode_old = 4'b0010; // SLT
+            4'b0101: opcode_old = 4'b0011; // SLTU
+            4'b0110: opcode_old = 4'b1000; // SUB
+            4'b0111: opcode_old = 4'b0100; // XOR
+            4'b1000: opcode_old = 4'b0101; // SRL
+            4'b1010: opcode_old = 4'b1101; // SRA
+            default: opcode_old = 4'b0000; // default to ADD
+        endcase
+    end
 
     add_sub_64 u_addsub(
         .a(a),
         .b(b),
-        .opcode(addsub_opcode),
+        .opcode(opcode_old),
         .out(addsub_out),
         .carry_flag(addsub_cout),
         .overflow_flag(addsub_overflow),
@@ -73,60 +85,60 @@ module alu_64_bit(
         overflow_flag = 0;
         result = 64'd0;
 
-        case (opcode)
-            // AND
-            4'b0000: begin
-                result = and_out;
-            end
-
-            // OR
-            4'b0001: begin
-                result = or_out;
-            end
-
+        case (opcode_old)
             // ADD
-            4'b0010: begin
+            4'b0000: begin
                 result = addsub_out;
                 cout = addsub_cout;
                 carry_flag = addsub_cout;
                 overflow_flag = addsub_overflow;
             end
 
-            // SLL 
-            4'b0011: begin
+            // SLL
+            4'b0001: begin
                 result = sll_out;
             end
 
             // SLT
-            4'b0100: begin
+            4'b0010: begin
                 result = slt_out;
             end
 
-            // SLTU 
-            4'b0101: begin
+            // SLTU
+            4'b0011: begin
                 result = sltu_out;
             end
 
-            // SUBTRACT
+            // XOR
+            4'b0100: begin
+                result = xor_out;
+            end
+
+            // SRL
+            4'b0101: begin
+                result = srl_out;
+            end
+
+            // OR
             4'b0110: begin
+                result = or_out;
+            end
+
+            // AND
+            4'b0111: begin
+                result = and_out;
+            end
+
+            // SUB
+            4'b1000: begin
                 result = addsub_out;
                 cout = addsub_cout;
                 carry_flag = addsub_cout;
                 overflow_flag = addsub_overflow;
             end
 
-            // XOR 
-            4'b0111: begin
-                result = xor_out;
-            end
-
-            // SRL
-            4'b1000: begin
-                result = srl_out;
-            end
-
             // SRA
-            4'b1010: begin
+            4'b1101: begin
                 result = sra_out;
             end
 
@@ -138,5 +150,3 @@ module alu_64_bit(
     end
 
 endmodule
-
-`endif

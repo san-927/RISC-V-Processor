@@ -1,6 +1,6 @@
 `ifndef ADD_SUB_V
 `define ADD_SUB_V
-`include "xor.v"
+`include "ALU/xor.v"
 
 module full_adder(
     input a,

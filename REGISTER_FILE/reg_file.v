@@ -6,8 +6,8 @@ module register_file(
     input [4:0] write_reg,
     input [63:0] write_data,
     input reg_write_en,
-    output [63:0] read_data1,
-    output [63:0] read_data2
+    output wire [63:0] read_data1,
+    output wire [63:0] read_data2
 );
 
 reg [63:0] registers [31:0];
@@ -22,8 +22,8 @@ initial begin
 end
 
 // Read data (combinational)
-assign read_data1 <= registers[read_reg1];
-assign read_data2 <= registers[read_reg2];   
+assign read_data1 = registers[read_reg1];
+assign read_data2 = registers[read_reg2];
 // Write data (sequential)
 always @(posedge clk or posedge reset) begin
     if (reset) begin

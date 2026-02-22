@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-`include "data_mem.v"
+`include "./data_mem.v"
 
 module data_mem_tb;
 
