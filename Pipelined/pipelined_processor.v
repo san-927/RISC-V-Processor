@@ -55,7 +55,7 @@ reg [63:0] IF_ID_PC;
 always @(posedge clk or posedge rst) 
 begin
 
-    if(rst)begin
+    if(rst || branch_taken)begin  // flush on branch taken
         IF_ID_instruction <= 32'd0;
         IF_ID_PC <= 64'd0;
     end else begin
@@ -147,7 +147,7 @@ reg ID_EX_reg_write;
 
 always @(posedge clk or posedge rst) 
 begin
-    if(rst)
+    if(rst || branch_taken)  // flush on branch taken
     begin
         ID_EX_reg_data1 <= 64'd0;
         ID_EX_reg_data2 <= 64'd0;
@@ -156,6 +156,7 @@ begin
         ID_EX_rd <= 5'd0;
         ID_EX_rs1 <= 5'd0;
         ID_EX_rs2 <= 5'd0;
+        ID_EX_instruction <= 32'd0;
         ID_EX_alu_op     <= 2'b00;
         ID_EX_mem_to_reg <= 1'b0;
         ID_EX_mem_read   <= 1'b0;
@@ -202,6 +203,10 @@ end
 wire [63:0] alu_result;
 wire alu_zero_flag;
 
+// Branch resolved in EX stage (static not-taken prediction)
+wire branch_taken;
+assign branch_taken = ID_EX_branch & alu_zero_flag;
+assign pc_in = branch_taken ? branch_target_address : pc_mux_0;
 
 wire [63:0] alu_b_in;
 reg  [63:0] alu_a_in;
@@ -328,12 +333,7 @@ data_mem data_mem_inst(
     .read_data(read_data) 
     );
 
-wire [63:0] pc_mux_1;
-wire branch_taken;
-and(branch_taken, EX_MEM_zero_flag, EX_MEM_branch);
-assign pc_mux_1 = EX_MEM_branch_target_address;
-
-assign pc_in = branch_taken ? pc_mux_1 : pc_mux_0;
+// Branch resolved in EX stage — pc_in and branch_taken assigned there
 
 
 // MEM/WB REGISTERS
