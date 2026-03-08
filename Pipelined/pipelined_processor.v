@@ -22,7 +22,7 @@ module pipelined_processor(
 
 //  Instruction Fetch Stage
 
-wire pc_mux_0;
+wire [63:0] pc_mux_0;
 wire [63:0] pc_out;
 wire [63:0] pc_in;
 wire [31:0] instruction;
@@ -56,15 +56,15 @@ always @(posedge clk or posedge rst)
 begin
 
     if(rst)begin
-        assign IF_ID_instruction <= 32'd0;
-        assign IF_ID_PC <= 64'd0;
+        IF_ID_instruction <= 32'd0;
+        IF_ID_PC <= 64'd0;
     end else begin
         if(IF_ID_write) begin
-            assign IF_ID_instruction <= instruction;
-            assign IF_ID_PC <= pc_out;
+            IF_ID_instruction <= instruction;
+            IF_ID_PC <= pc_out;
         end else begin
-            assign IF_ID_instruction <= IF_ID_instruction;
-            assign IF_ID_PC <= IF_ID_PC;
+            IF_ID_instruction <= IF_ID_instruction;
+            IF_ID_PC <= IF_ID_PC;
         end
     end
 end
@@ -78,10 +78,10 @@ end
     // assign rd = instruction[11:7];
     register_file reg_file_inst(
         .clk(clk),
-        .reset(reset),
+        .reset(rst),
         .read_reg1(rs1),
         .read_reg2(rs2),
-        .write_reg(EX_MEM_rd),  
+        .write_reg(MEM_WB_rd),   // CORRECT
         .write_data(reg_write_data),
         .reg_write_en(MEM_WB_reg_write),    //CONTROL SIGNAL TO ADD
         .read_data1(reg_data1),
@@ -104,7 +104,7 @@ end
 
     
 
-    wire imm_out;
+    wire [63:0] imm_out;
     ImmGen imm_gen_inst(
         .instruction(IF_ID_instruction),
         .imm_out(imm_out)
@@ -131,9 +131,10 @@ reg [63:0] ID_EX_reg_data1;
 reg [63:0] ID_EX_reg_data2;
 reg [63:0] ID_EX_imm_out; 
 reg [63:0] ID_EX_PC;
-reg [31:0] ID_EX_rd;
+reg [4:0] ID_EX_rd;
 reg [4:0] ID_EX_rs1;
 reg [4:0] ID_EX_rs2;
+reg [31:0] ID_EX_instruction;  // add to ID/EX register
 
 // Control Unit
 reg [1:0] ID_EX_alu_op;
@@ -146,53 +147,53 @@ reg ID_EX_reg_write;
 
 always @(posedge clk or posedge rst) 
 begin
-    if(reset)
+    if(rst)
     begin
-        assign ID_EX_reg_data1 <= 64'd0;
-        assign ID_EX_reg_data2 <= 64'd0;
-        assign ID_EX_imm_out <= 64'd0;
-        assign ID_EX_PC <= 64'd0;
-        assign ID_EX_rd <= 5'd0;
-        assign ID_EX_rs1 <= 5'd0;
-        assign ID_EX_rs2 <= 5'd0;
-        assign ID_EX_alu_op     <= 2'b00;
-        assign ID_EX_mem_to_reg <= 1'b0;
-        assign ID_EX_mem_read   <= 1'b0;
-        assign ID_EX_mem_write  <= 1'b0;
-        assign ID_EX_branch     <= 1'b0;
-        assign ID_EX_alu_src    <= 1'b0;
-        assign ID_EX_reg_write  <= 1'b0;
+        ID_EX_reg_data1 <= 64'd0;
+        ID_EX_reg_data2 <= 64'd0;
+        ID_EX_imm_out <= 64'd0;
+        ID_EX_PC <= 64'd0;
+        ID_EX_rd <= 5'd0;
+        ID_EX_rs1 <= 5'd0;
+        ID_EX_rs2 <= 5'd0;
+        ID_EX_alu_op     <= 2'b00;
+        ID_EX_mem_to_reg <= 1'b0;
+        ID_EX_mem_read   <= 1'b0;
+        ID_EX_mem_write  <= 1'b0;
+        ID_EX_branch     <= 1'b0;
+        ID_EX_alu_src    <= 1'b0;
+        ID_EX_reg_write  <= 1'b0;
     end
     else begin
-    assign ID_EX_reg_data1 <= reg_data1;
-    assign ID_EX_reg_data2 <= reg_data2;
-    assign ID_EX_imm_out <= imm_out;
-    assign ID_EX_PC <= IF_ID_PC;
-    assign ID_EX_rd <= IF_ID_instruction[11:7];
-    assign ID_EX_rs1 <= rs1;
-    assign ID_EX_rs2 <= rs2;
-
+    ID_EX_reg_data1 <= reg_data1;
+    ID_EX_reg_data2 <= reg_data2;
+    ID_EX_imm_out <= imm_out;
+    ID_EX_PC <= IF_ID_PC;
+    ID_EX_rd <= IF_ID_instruction[11:7];
+    ID_EX_rs1 <= rs1;
+    ID_EX_rs2 <= rs2;
+    ID_EX_instruction <= IF_ID_instruction; // latch it
 
         if(control_mux) 
         begin
-            assign ID_EX_alu_op     <= 2'b00;
-            assign ID_EX_mem_to_reg <= 1'b0;
-            assign ID_EX_mem_read   <= 1'b0;
-            assign ID_EX_mem_write  <= 1'b0;
-            assign ID_EX_branch     <= 1'b0;
-            assign ID_EX_alu_src    <= 1'b0;
-            assign ID_EX_reg_write  <= 1'b0;
+            ID_EX_alu_op     <= 2'b00;
+            ID_EX_mem_to_reg <= 1'b0;
+            ID_EX_mem_read   <= 1'b0;
+            ID_EX_mem_write  <= 1'b0;
+            ID_EX_branch     <= 1'b0;
+            ID_EX_alu_src    <= 1'b0;
+            ID_EX_reg_write  <= 1'b0;
         end
 
         else
         begin
-            assign ID_EX_alu_op     <= alu_op;
-            assign ID_EX_mem_to_reg <= mem_to_reg;
-            assign ID_EX_mem_read   <= mem_read;
-            assign ID_EX_mem_write  <= mem_write;
-            assign ID_EX_branch     <= branch;
-            assign ID_EX_alu_src    <= alu_src;
-            assign ID_EX_reg_write  <= reg_write;
+            ID_EX_alu_op     <= alu_op;
+            ID_EX_mem_to_reg <= mem_to_reg;
+            ID_EX_mem_read   <= mem_read;
+            ID_EX_mem_write  <= mem_write;
+            ID_EX_branch     <= branch;
+            ID_EX_alu_src    <= alu_src;
+            ID_EX_reg_write  <= reg_write;
         end
     end
 end
@@ -203,38 +204,37 @@ wire alu_zero_flag;
 
 
 wire [63:0] alu_b_in;
-wire [63:0] alu_a_in;
+reg  [63:0] alu_a_in;
+reg  [63:0] alu_pre_b_in;
 
-wire [63:0] alu_pre_b_in;
-
-case (fwd_A)
-    2'b00: alu_a_in = ID_EX_reg_data1;
-    2'b01: alu_a_in = reg_write_data;
-    2'b10: alu_a_in = EX_MEM_alu_result;
-    default: alu_a_in = ID_EX_reg_data1;
-endcase
-
-case (fwd_B)
-    2'b00: alu_pre_b_in = ID_EX_reg_data2;
-    2'b01: alu_pre_b_in = reg_write_data;
-    2'b10: alu_pre_b_in = EX_MEM_alu_result;
-    default: alu_pre_b_in = ID_EX_reg_data2;
-endcase
-
+always @(*) begin
+    case (fwd_A)
+        2'b00: alu_a_in = ID_EX_reg_data1;
+        2'b01: alu_a_in = reg_write_data;
+        2'b10: alu_a_in = EX_MEM_alu_result;
+        default: alu_a_in = ID_EX_reg_data1;
+    endcase
+    case (fwd_B)
+        2'b00: alu_pre_b_in = ID_EX_reg_data2;
+        2'b01: alu_pre_b_in = reg_write_data;
+        2'b10: alu_pre_b_in = EX_MEM_alu_result;
+        default: alu_pre_b_in = ID_EX_reg_data2;
+    endcase
+end
 
 assign alu_b_in = ID_EX_alu_src ? ID_EX_imm_out: alu_pre_b_in;
 
 
-wire branch_target_address;
+wire [63:0] branch_target_address;
     add_sub_64 add_sub_inst_2(
         .a(ID_EX_PC),
-        .b([ID_EX_imm_out[62:0],0]),
+        .b({ID_EX_imm_out[62:0], 1'b0}),
         .opcode(4'b0000), 
         .out(branch_target_address)
     );
 
 alu_64_bit alu_inst(
-    .a(ID_EX_reg_data1),
+    .a(alu_a_in),
     .b(alu_b_in),
     .opcode(alu_ctrl),
     .result(alu_result),
@@ -252,7 +252,10 @@ alu_control alu_ctrl_inst(
     .ALUControl(alu_ctrl)
 );
 
-wire [1;0] fwd_A;
+assign funct3 = ID_EX_instruction[14:12];
+assign funct7 = ID_EX_instruction[31:25];
+
+wire [1:0] fwd_A;
 wire [1:0] fwd_B;
 
 forwarding_unit forwarding_unit_inst(
@@ -273,7 +276,7 @@ reg [63:0] EX_MEM_branch_target_address;
 reg EX_MEM_zero_flag;
 reg [63:0] EX_MEM_alu_result;
 reg [63:0] EX_MEM_write_data;
-reg [31:0] EX_MEM_rd;
+reg [4:0] EX_MEM_rd;
 
 // Control Unit
 reg EX_MEM_mem_to_reg;
@@ -286,29 +289,29 @@ always @(posedge clk or posedge rst)
 begin
 
     if(rst) begin
-        assign EX_MEM_branch_target_address <= 64'd0;
-        assign EX_MEM_zero_flag <= 1'b0;
-        assign EX_MEM_alu_result <= 64'd0;
-        assign EX_MEM_write_data <= 64'd0;
-        assign EX_MEM_rd <= 5'd0;
+        EX_MEM_branch_target_address <= 64'd0;
+        EX_MEM_zero_flag <= 1'b0;
+        EX_MEM_alu_result <= 64'd0;
+        EX_MEM_write_data <= 64'd0;
+        EX_MEM_rd <= 5'd0;
 
-        assign EX_MEM_mem_to_reg <= 1'b0;
-        assign EX_MEM_mem_read   <= 1'b0;
-        assign EX_MEM_mem_write  <= 1'b0;
-        assign EX_MEM_branch     <= 1'b0;
-        assign EX_MEM_reg_write  <= 1'b0;
+        EX_MEM_mem_to_reg <= 1'b0;
+        EX_MEM_mem_read   <= 1'b0;
+        EX_MEM_mem_write  <= 1'b0;
+        EX_MEM_branch     <= 1'b0;
+        EX_MEM_reg_write  <= 1'b0;
     end else begin
-        assign EX_MEM_branch_target_address <= branch_target_address;
-        assign EX_MEM_zero_flag <= alu_zero_flag;
-        assign EX_MEM_alu_result <= alu_result;
-        assign EX_MEM_write_data <= reg_write_data;
-        assign EX_MEM_rd <= ID_EX_rd;
+        EX_MEM_branch_target_address <= branch_target_address;
+        EX_MEM_zero_flag <= alu_zero_flag;
+        EX_MEM_alu_result <= alu_result;
+        EX_MEM_write_data <= alu_pre_b_in;    // CORRECT — forwarded rs2 value
+        EX_MEM_rd <= ID_EX_rd;
 
-        assign EX_MEM_mem_to_reg <= ID_EX_mem_to_reg;
-        assign EX_MEM_mem_read   <= ID_EX_mem_read;
-        assign EX_MEM_mem_write  <= ID_EX_mem_write;
-        assign EX_MEM_branch     <= ID_EX_branch;
-        assign EX_MEM_reg_write  <= ID_EX_reg_write;
+        EX_MEM_mem_to_reg <= ID_EX_mem_to_reg;
+        EX_MEM_mem_read   <= ID_EX_mem_read;
+        EX_MEM_mem_write  <= ID_EX_mem_write;
+        EX_MEM_branch     <= ID_EX_branch;
+        EX_MEM_reg_write  <= ID_EX_reg_write;
     end
 end
 
@@ -325,7 +328,7 @@ data_mem data_mem_inst(
     .read_data(read_data) 
     );
 
-wire pc_mux_1;
+wire [63:0] pc_mux_1;
 wire branch_taken;
 and(branch_taken, EX_MEM_zero_flag, EX_MEM_branch);
 assign pc_mux_1 = EX_MEM_branch_target_address;
@@ -336,7 +339,7 @@ assign pc_in = branch_taken ? pc_mux_1 : pc_mux_0;
 // MEM/WB REGISTERS
 reg [63:0] MEM_WB_read_data;
 reg [63:0] MEM_WB_alu_result;
-reg [63:0] MEM_WB_rd;
+reg [4:0] MEM_WB_rd;
 
 reg MEM_WB_mem_to_reg;
 reg MEM_WB_reg_write;
@@ -346,20 +349,20 @@ always @(posedge clk or posedge rst)
 begin
     if(rst)
     begin 
-        assign MEM_WB_alu_result <= 64'd0;
-        assign MEM_WB_read_data  <= 64'd0;
-        assign MEM_WB_rd         <= 5'd0;
-        assign MEM_WB_mem_to_reg <= 1'b0;
-        assign MEM_WB_reg_write  <= 1'b0;
+        MEM_WB_alu_result <= 64'd0;
+        MEM_WB_read_data  <= 64'd0;
+        MEM_WB_rd         <= 5'd0;
+        MEM_WB_mem_to_reg <= 1'b0;
+        MEM_WB_reg_write  <= 1'b0;
 
     end
     else
     begin
-        assign MEM_WB_alu_result <= EX_MEM_alu_result;
-        assign MEM_WB_read_data <= read_data;
-        assign MEM_WB_rd <= EX_MEM_rd;
-        assign MEM_WB_mem_to_reg <= EX_MEM_mem_to_reg;
-        assign MEM_WB_reg_write  <= EX_MEM_reg_write;
+        MEM_WB_alu_result <= EX_MEM_alu_result;
+        MEM_WB_read_data <= read_data;
+        MEM_WB_rd <= EX_MEM_rd;
+        MEM_WB_mem_to_reg <= EX_MEM_mem_to_reg;
+        MEM_WB_reg_write  <= EX_MEM_reg_write;
     end
 end
 
