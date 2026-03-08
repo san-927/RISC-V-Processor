@@ -11,23 +11,15 @@ module data_hazard_unit(
     output control_mux
 );
 
+wire load_use_hazard;
 
-    if(ID_EX_mem_read)
-    begin
-        if((ID_EX_rd == IF_ID_rs1) || (ID_EX_rd == IF_ID_rs2))
-        begin
-            assign control_mux = 1'b1;
-            assign pc_write = 1'b0;
-            assign IF_ID_write = 1'b0;
-        end
+assign load_use_hazard = ID_EX_mem_read &&
+                        (ID_EX_rd != 5'd0) &&
+                        ((ID_EX_rd == IF_ID_rs1) || (ID_EX_rd == IF_ID_rs2));
 
-        else
-        begin
-            assign control_mux = 1'b0;
-            assign pc_write = 1'b1;
-            assign IF_ID_write = 1'b1;
-        end
-    end
+assign control_mux = load_use_hazard;
+assign pc_write = ~load_use_hazard;
+assign IF_ID_write = ~load_use_hazard;
 
 endmodule
 

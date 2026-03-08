@@ -29,15 +29,15 @@ wire [31:0] instruction;
 
 pc pc_inst (
     .clk(clk),
-    .rst(rst),
+    .reset(rst),
     .pc_in(pc_in), 
     .pc_out(pc_out),
     .pc_write(pc_write)
 );
 
 instruction_mem ins_mem_inst (
-    .address(pc_out), 
-    .instruction(instruction)
+    .addr(pc_out), 
+    .instr(instruction)
 );
 
 add_sub_64 add_sub_inst (
@@ -72,6 +72,7 @@ end
 // Instruction Decode Stage
     wire [4:0] rs1, rs2, rd;
     wire [63:0] reg_data1, reg_data2, reg_write_data;
+    wire [63:0] id_read_data1, id_read_data2;
 
     assign rs1 = IF_ID_instruction[19:15];
     assign rs2 = IF_ID_instruction[24:20];
@@ -81,12 +82,19 @@ end
         .reset(rst),
         .read_reg1(rs1),
         .read_reg2(rs2),
-        .write_reg(MEM_WB_rd),   // CORRECT
+        .write_reg(MEM_WB_rd),   
         .write_data(reg_write_data),
-        .reg_write_en(MEM_WB_reg_write),    //CONTROL SIGNAL TO ADD
+        .reg_write_en(MEM_WB_reg_write),    //CONTROL SIGNAL 
         .read_data1(reg_data1),
         .read_data2(reg_data2)
     );
+
+    // WB-to-ID bypass
+   
+    assign id_read_data1 = (MEM_WB_reg_write && (MEM_WB_rd != 5'd0) && (MEM_WB_rd == rs1))
+                         ? reg_write_data : reg_data1;
+    assign id_read_data2 = (MEM_WB_reg_write && (MEM_WB_rd != 5'd0) && (MEM_WB_rd == rs2))
+                         ? reg_write_data : reg_data2;
 
 
     wire pc_write, IF_ID_write, control_mux;
@@ -106,7 +114,7 @@ end
 
     wire [63:0] imm_out;
     ImmGen imm_gen_inst(
-        .instruction(IF_ID_instruction),
+        .instr(IF_ID_instruction),
         .imm_out(imm_out)
     );
 
@@ -166,8 +174,8 @@ begin
         ID_EX_reg_write  <= 1'b0;
     end
     else begin
-    ID_EX_reg_data1 <= reg_data1;
-    ID_EX_reg_data2 <= reg_data2;
+    ID_EX_reg_data1 <= id_read_data1;
+    ID_EX_reg_data2 <= id_read_data2;
     ID_EX_imm_out <= imm_out;
     ID_EX_PC <= IF_ID_PC;
     ID_EX_rd <= IF_ID_instruction[11:7];
@@ -203,7 +211,7 @@ end
 wire [63:0] alu_result;
 wire alu_zero_flag;
 
-// Branch resolved in EX stage (static not-taken prediction)
+// Branch resolved in EX stage 
 wire branch_taken;
 assign branch_taken = ID_EX_branch & alu_zero_flag;
 assign pc_in = branch_taken ? branch_target_address : pc_mux_0;
@@ -233,7 +241,7 @@ assign alu_b_in = ID_EX_alu_src ? ID_EX_imm_out: alu_pre_b_in;
 wire [63:0] branch_target_address;
     add_sub_64 add_sub_inst_2(
         .a(ID_EX_PC),
-        .b({ID_EX_imm_out[62:0], 1'b0}),
+        .b(ID_EX_imm_out),
         .opcode(4'b0000), 
         .out(branch_target_address)
     );
@@ -309,7 +317,7 @@ begin
         EX_MEM_branch_target_address <= branch_target_address;
         EX_MEM_zero_flag <= alu_zero_flag;
         EX_MEM_alu_result <= alu_result;
-        EX_MEM_write_data <= alu_pre_b_in;    // CORRECT — forwarded rs2 value
+        EX_MEM_write_data <= alu_pre_b_in;    
         EX_MEM_rd <= ID_EX_rd;
 
         EX_MEM_mem_to_reg <= ID_EX_mem_to_reg;
@@ -326,14 +334,13 @@ wire [63:0]read_data;
 data_mem data_mem_inst(
     .clk(clk), 
     .reset(rst), 
-    .address(EX_MEM_alu_result), 
+    .address(EX_MEM_alu_result[9:0]), 
     .write_data(EX_MEM_write_data), 
     .MemRead(EX_MEM_mem_read), 
     .MemWrite(EX_MEM_mem_write), 
     .read_data(read_data) 
     );
 
-// Branch resolved in EX stage — pc_in and branch_taken assigned there
 
 
 // MEM/WB REGISTERS
