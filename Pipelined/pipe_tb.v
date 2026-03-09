@@ -52,14 +52,15 @@ module ppd;
         fork
             begin : RUN_LOOP
                 while (1) begin
-                    #10;
-                    cycle_count = cycle_count + 1;
-
-                    // EOF detection (PC reached end of instructions.txt)
-                    if (instr_bytes > 0 && dut.pc_out > instr_bytes) begin
+                    // EOF cycle: count it, then stop without executing another step
+                    if (instr_bytes > 0 && dut.pc_out >= instr_bytes) begin
+                        cycle_count = cycle_count + 1;
                         $display("EOF reached at cycle %0d", cycle_count);
                         disable RUN_LOOP;
                     end
+
+                    #10;
+                    cycle_count = cycle_count + 1;
 
                     // Timeout
                     if (cycle_count > 2000) begin
