@@ -285,7 +285,6 @@ forwarding_unit forwarding_unit_inst(
 
 
 // EX/MEM REGISTERS
-reg [63:0] EX_MEM_branch_target_address;
 reg EX_MEM_zero_flag;
 reg [63:0] EX_MEM_alu_result;
 reg [63:0] EX_MEM_write_data;
@@ -302,7 +301,6 @@ always @(posedge clk or posedge rst)
 begin
 
     if(rst) begin
-        EX_MEM_branch_target_address <= 64'd0;
         EX_MEM_zero_flag <= 1'b0;
         EX_MEM_alu_result <= 64'd0;
         EX_MEM_write_data <= 64'd0;
@@ -314,7 +312,6 @@ begin
         EX_MEM_branch     <= 1'b0;
         EX_MEM_reg_write  <= 1'b0;
     end else begin
-        EX_MEM_branch_target_address <= branch_target_address;
         EX_MEM_zero_flag <= alu_zero_flag;
         EX_MEM_alu_result <= alu_result;
         EX_MEM_write_data <= alu_pre_b_in;    
